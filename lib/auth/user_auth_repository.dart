@@ -1,27 +1,26 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-class UserAuthRepository extends ChangeNotifier{
+class UserAuthRepository {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  bool isAlreadyLogged(){
+  bool isAlreadyLogged() {
     var user = _auth.currentUser;
     print("User: ${user?.displayName}");
     return user != null;
   }
 
-  Future<void> signOutGoogle()async{
+  Future<void> signOutGoogle() async {
     await _googleSignIn.signOut();
   }
 
-  Future<void> signOutFirebase()async{
+  Future<void> signOutFirebase() async {
     await _auth.signOut();
   }
 
-  Future<void> signInWithGoogle()async{
+  Future<void> signInWithGoogle() async {
+    // Google sign in
     final googleUser = await _googleSignIn.signIn();
     final googleAuth = await googleUser!.authentication;
 
@@ -29,24 +28,22 @@ class UserAuthRepository extends ChangeNotifier{
     print("User: ${googleUser.email}");
     print("User: ${googleUser.photoUrl}");
 
-    //credenciales para firebase
+    // credenciales para firebase
     final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    //firebase sign in
+    // firebase sign in
+
     final authResult = await _auth.signInWithCredential(credential);
     final User user = authResult.user!;
     final firebaseToken = await user.getIdToken();
     assert(!user.isAnonymous);
-    // ignore: unnecessary_null_comparison
-    assert(firebaseToken!=null);
+    assert(firebaseToken != null);
     final User currentUser = _auth.currentUser!;
     assert(user.uid == currentUser.uid);
 
-    print("Firebase Token: $firebaseToken");
-    notifyListeners();
+    print("Firebase Token:  $firebaseToken");
   }
-
 }

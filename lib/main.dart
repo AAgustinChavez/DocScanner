@@ -1,30 +1,39 @@
-import 'package:doc_scanner/auth/google_sign_in.dart';
+import 'package:doc_scanner/create_file_img.dart';
 import 'package:doc_scanner/login/login_page.dart';
-import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'auth/bloc/auth_bloc.dart';
 
-Future<void> main() async {
+void main() async {
+  // inicializar firebase
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  // inicializar auth bloc provider
 
-  runApp(MyApp());
+  runApp(
+    BlocProvider(
+      create: (context) => AuthBloc()..add(VerifyAuthEvent()),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  static const String title = 'Doc Scanner';
-
+  // bloc builder con estados de auth bloc
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MultiProvider(
-        providers: [
-          ChangeNotifierProvider<GoogleSignInProvider>(create: (context) => GoogleSignInProvider()),
-          
-        ],
-        child: const LoginPage(),
-      ),
-    );
-    
+        home: BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {},
+      builder: (context, state) {
+        if (state is AlreadyAuthState) {
+          return CreateFileIMG();
+        } else if (state is UnAuthState) {
+          return const LoginPage();
+        } 
+        return const LoginPage();
+      },
+    ));
   }
 }
