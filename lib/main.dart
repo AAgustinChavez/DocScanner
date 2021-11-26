@@ -1,5 +1,4 @@
-import 'package:doc_scanner/create_file_img.dart';
-import 'package:doc_scanner/login/login_page.dart';
+import 'package:doc_scanner/login/login_test.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -28,11 +27,11 @@ class MyApp extends StatelessWidget {
       listener: (context, state) {},
       builder: (context, state) {
         if (state is AlreadyAuthState) {
-          return CreateFileIMG();
+          return const LoginTest();
         } else if (state is UnAuthState) {
-          return const LoginPage();
+          return const LoginTest();
         } 
-        return const LoginPage();
+        return const LoginTest();
       },
     ));
   }

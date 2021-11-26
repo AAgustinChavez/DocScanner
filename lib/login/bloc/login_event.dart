@@ -9,6 +9,12 @@ abstract class LoginEvent extends Equatable {
 
 class LoginWithGoogleEvent extends LoginEvent {}
 
-class LoginWithAnonymousEvent extends LoginEvent {}
+class LoginWithFirebaseEvent extends LoginEvent {
+  final String email;
+  final String password;
 
-class LoginWithFacebookEvent extends LoginEvent {}
+  const LoginWithFirebaseEvent({required this.email, required this.password});
+
+  @override
+  List<Object> get props => [email, password];
+}
