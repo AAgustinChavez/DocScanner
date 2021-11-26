@@ -20,6 +20,7 @@ class ImagePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.cyan,
         title: Text(file.name),
         centerTitle: true,
         actions: [

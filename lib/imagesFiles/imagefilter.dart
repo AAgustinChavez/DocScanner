@@ -10,6 +10,10 @@ import 'package:photofilters/photofilters.dart';
 import 'package:image/image.dart' as imageLib;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as Path;
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:path_provider/path_provider.dart';
+import 'package:intl/intl.dart';
 
 class ImageFilter extends StatefulWidget {
   const ImageFilter({Key? key}) : super(key: key); //const
@@ -27,6 +31,8 @@ class _ImageFilterState extends State<ImageFilter> {
   late AuthBloc _authBloc;
   File? _doc;
   String? _uploadedFileURL;
+  final pdf = pw.Document();
+  File? pdffile;
 
   Future getImage(context) async {
     final pickedFile = await ImagePicker().pickImage(
@@ -47,6 +53,7 @@ class _ImageFilterState extends State<ImageFilter> {
           builder: (context) => PhotoFilterSelector(
             title: const Text("Document Filter"),
             image: image!,
+            appBarColor:Colors.cyan,
             filters: presetFiltersList,
             filename: fileName,
             loader: Center(child: CircularProgressIndicator()),
@@ -68,9 +75,10 @@ class _ImageFilterState extends State<ImageFilter> {
   Future uploadFile(context) async {
     final User? user = auth.currentUser;
     final uid = user!.uid;
+
     Reference storageReference = FirebaseStorage.instance
-        .ref()
-        .child('documents/'+uid+'/'+Path.basename(_doc!.path));
+        .ref()//Path.basename(_doc!.path)
+        .child('documents/' + uid + '/' + DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now())+'.jpg');
     UploadTask uploadTask = storageReference.putFile(_doc!);
     await uploadTask.then((p0) => null);
     print('File Uploaded');
@@ -85,20 +93,34 @@ class _ImageFilterState extends State<ImageFilter> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.cyan,
           title: const Text('Scanned Document...'),
         ),
-        body: Center(
-          child: Container(
-            child: imageFile == null
-                ? const Center(
-                    child: Text('Missing document file.'),
-                  )
-                : Image.file(File(imageFile!.path)),
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: const [
+                Colors.cyan,
+                Colors.white,
+              ],
+            ),
+          ),
+          child: Center(
+            child: Container(
+              child: imageFile == null
+                  ? const Center(
+                      child: Text('Missing document file.'),
+                    )
+                  : Image.file(File(imageFile!.path)),
+            ),
           ),
         ),
         floatingActionButton:
             Column(mainAxisAlignment: MainAxisAlignment.end, children: [
           FloatingActionButton(
+            backgroundColor: Colors.red,
             child: Icon(Icons.add_a_photo),
             onPressed: () => getImage(context),
             tooltip: 'Pick Image',
@@ -108,6 +130,7 @@ class _ImageFilterState extends State<ImageFilter> {
             height: 10,
           ),
           FloatingActionButton(
+            backgroundColor: Colors.red,
             child: Icon(Icons.upload_file),
             onPressed: () => {
               uploadFile(context),

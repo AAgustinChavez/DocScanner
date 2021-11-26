@@ -13,6 +13,7 @@ import 'dart:io';
 import 'package:photofilters/photofilters.dart';
 import 'package:image/image.dart' as imageLib;
 import 'package:path/path.dart' as Path;
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class CreateFileIMG extends StatefulWidget {
   const CreateFileIMG({Key? key}) : super(key: key); //const
@@ -32,10 +33,10 @@ class _CreateFileIMGState extends State<CreateFileIMG> {
     final User? user = auth.currentUser;
     final uid = user!.uid;
     futureFiles = FirebaseApi.listAll('documents/' + uid + '/');
-    
   }
 
   Widget buildFile(BuildContext context, FirebaseFile file) => ListTile(
+        
         leading: ClipOval(
           child: Image.network(
             file.url,
@@ -49,7 +50,7 @@ class _CreateFileIMGState extends State<CreateFileIMG> {
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             decoration: TextDecoration.underline,
-            color: Colors.blue,
+            color: Colors.black,
           ),
         ),
         onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -118,61 +119,78 @@ class _CreateFileIMGState extends State<CreateFileIMG> {
                 )
               ],
             ),
-            body: FutureBuilder<List<FirebaseFile>>(
-              future: futureFiles,
-              builder: (context, snapshot) {
-                switch (snapshot.connectionState) {
-                  case ConnectionState.waiting:
-                    return Center(child: CircularProgressIndicator());
-                  default:
-                    if (snapshot.hasError) {
-                      return const Center(child: Text('Some error occurred!'));
-                    } else {
-                      final files = snapshot.data!;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          buildHeader(files.length),
-                          const SizedBox(height: 12),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: files.length,
-                              itemBuilder: (context, index) {
-                                final file = files[index];
+            body: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: const [
+                    
+                    Colors.cyan,
+                    Colors.white,
+                  ],
+                ),
+              ),
+              child: FutureBuilder<List<FirebaseFile>>(
+                future: futureFiles,
+                builder: (context, snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return Center(child: CircularProgressIndicator());
+                    default:
+                      if (snapshot.hasError) {
+                        return const Center(
+                            child: Text('Some error occurred!'));
+                      } else {
+                        final files = snapshot.data!;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            buildHeader(files.length),
+                            const SizedBox(height: 12),
+                            Expanded(
+                              child: ListView.builder(
+                                itemCount: files.length,
+                                itemBuilder: (context, index) {
+                                  final file = files[index];
 
-                                return buildFile(context, file);
-                              },
+                                  return buildFile(context, file);
+                                },
+                              ),
                             ),
-                          ),
-                          Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                ListView(
-                                  shrinkWrap: true,
-                                  padding: const EdgeInsets.all(20),
-                                  children: [
-                                    ButtonBar(
-                                        alignment: MainAxisAlignment.center,
-                                        children: [
-                                          IconButton(
-                                              onPressed: () async {
-                                                Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            const ImageFilter()));
-                                              },
-                                              icon: Icon(Icons.scanner,
-                                                  color: Colors.cyan, size: 50))
-                                        ]),
-                                  ],
-                                ),
-                              ]),
-                        ],
-                      );
-                    }
-                }
-              },
+                            Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  ListView(
+                                    shrinkWrap: true,
+                                    padding: const EdgeInsets.all(20),
+                                    children: [
+                                      ButtonBar(
+                                          alignment: MainAxisAlignment.center,
+                                          children: [
+                                            IconButton(
+                                                onPressed: () async {
+                                                  Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              ImageFilter())).then(
+                                                      (value) =>
+                                                          setState(() {}));
+                                                },
+                                                icon: Icon(Icons.scanner,
+                                                    color: Colors.red,
+                                                    size: 50))
+                                          ]),
+                                    ],
+                                  ),
+                                ]),
+                          ],
+                        );
+                      }
+                  }
+                },
+              ),
             ),
           );
         },
