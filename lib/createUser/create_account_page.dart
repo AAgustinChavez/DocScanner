@@ -75,8 +75,8 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your password';
-                    } else if (int.parse(value) < 8) {
-                      return 'Must be at least 8 characters';
+                    } else if (value.length < 8) {
+                      return '';
                     } else {
                       password = value;
                     }

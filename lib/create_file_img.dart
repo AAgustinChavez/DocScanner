@@ -1,14 +1,21 @@
+import 'package:doc_scanner/api/firebase_api.dart';
 import 'package:doc_scanner/auth/bloc/auth_bloc.dart';
+import 'package:doc_scanner/imagesFiles/imagefilter.dart';
 import 'package:doc_scanner/login/login_test.dart';
+import 'package:doc_scanner/model/firebase_file.dart';
+import 'package:doc_scanner/page/image_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:photofilters/photofilters.dart';
+import 'package:image/image.dart' as imageLib;
 import 'package:path/path.dart' as Path;
 
 class CreateFileIMG extends StatefulWidget {
-  CreateFileIMG({Key? key}) : super(key: key);
+  const CreateFileIMG({Key? key}) : super(key: key); //const
 
   @override
   _CreateFileIMGState createState() => _CreateFileIMGState();
@@ -16,38 +23,59 @@ class CreateFileIMG extends StatefulWidget {
 
 class _CreateFileIMGState extends State<CreateFileIMG> {
   late AuthBloc _authBloc;
-  File? _doc;
-  String? _uploadedFileURL;
-  //img
-  Future<File?> _getImage() async {
-    final pickedImage = await ImagePicker().pickImage(
-        source: ImageSource.camera,
-        maxHeight: 720,
-        maxWidth: 720,
-        imageQuality: 85);
-    if (pickedImage != null) {
-      setState(() {
-        _doc = File(pickedImage.path);
-      });
-      return File(pickedImage.path);
-    } else {
-      return null;
-    }
+  final FirebaseAuth auth = FirebaseAuth.instance;
+  late Future<List<FirebaseFile>> futureFiles;
+
+  @override
+  void initState() {
+    super.initState();
+    final User? user = auth.currentUser;
+    final uid = user!.uid;
+    futureFiles = FirebaseApi.listAll('documents/' + uid + '/');
+    
   }
 
-  Future uploadFile() async {
-    Reference storageReference = FirebaseStorage.instance
-        .ref()
-        .child('chats/${Path.basename(_doc!.path)}}');
-    UploadTask uploadTask = storageReference.putFile(_doc!);
-    await uploadTask.then((p0) => null);
-    print('File Uploaded');
-    storageReference.getDownloadURL().then((fileURL) {
-      setState(() {
-        _uploadedFileURL = fileURL;
-      });
-    });
-  }
+  Widget buildFile(BuildContext context, FirebaseFile file) => ListTile(
+        leading: ClipOval(
+          child: Image.network(
+            file.url,
+            width: 52,
+            height: 52,
+            fit: BoxFit.cover,
+          ),
+        ),
+        title: Text(
+          file.name,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            decoration: TextDecoration.underline,
+            color: Colors.blue,
+          ),
+        ),
+        onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => ImagePage(file: file),
+        )),
+      );
+
+  Widget buildHeader(int length) => ListTile(
+        tileColor: Colors.blue,
+        leading: Container(
+          width: 52,
+          height: 52,
+          child: Icon(
+            Icons.file_copy,
+            color: Colors.white,
+          ),
+        ),
+        title: Text(
+          '$length Files',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.white,
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -57,15 +85,14 @@ class _CreateFileIMGState extends State<CreateFileIMG> {
         return _authBloc;
       },
       child: BlocConsumer<AuthBloc, AuthState>(
-        listener: (context, state) {
-         
-        },
+        listener: (context, state) {},
         builder: (context, state) {
           if (state is UnAuthState) {
-              return const LoginTest();
+            return const LoginTest();
           }
           return Scaffold(
-            appBar: new AppBar(
+            appBar: AppBar(
+              backgroundColor: Colors.cyan,
               title: const Text("My Documents"),
               actions: [
                 Padding(
@@ -82,7 +109,6 @@ class _CreateFileIMGState extends State<CreateFileIMG> {
                             shape: MaterialStateProperty.all<
                                 RoundedRectangleBorder>(RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(18.0),
-                              //side: const BorderSide(width: 1.0, color: Colors.black),
                             ))),
                         child: const Text(
                           'Log out',
@@ -92,24 +118,61 @@ class _CreateFileIMGState extends State<CreateFileIMG> {
                 )
               ],
             ),
-            body: Center(
-              child: ListView(
-                shrinkWrap: true,
-                padding: EdgeInsets.all(20),
-                children: [
-                  Container(
-                    color: Colors.cyan[50],
-                    child: ButtonBar(children: [
-                      IconButton(
-                          onPressed: () async {
-                            _doc = await _getImage();
-                          },
-                          icon:
-                              Icon(Icons.scanner, color: Colors.cyan, size: 50))
-                    ]),
-                  ),
-                ],
-              ),
+            body: FutureBuilder<List<FirebaseFile>>(
+              future: futureFiles,
+              builder: (context, snapshot) {
+                switch (snapshot.connectionState) {
+                  case ConnectionState.waiting:
+                    return Center(child: CircularProgressIndicator());
+                  default:
+                    if (snapshot.hasError) {
+                      return const Center(child: Text('Some error occurred!'));
+                    } else {
+                      final files = snapshot.data!;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          buildHeader(files.length),
+                          const SizedBox(height: 12),
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: files.length,
+                              itemBuilder: (context, index) {
+                                final file = files[index];
+
+                                return buildFile(context, file);
+                              },
+                            ),
+                          ),
+                          Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                ListView(
+                                  shrinkWrap: true,
+                                  padding: const EdgeInsets.all(20),
+                                  children: [
+                                    ButtonBar(
+                                        alignment: MainAxisAlignment.center,
+                                        children: [
+                                          IconButton(
+                                              onPressed: () async {
+                                                Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            const ImageFilter()));
+                                              },
+                                              icon: Icon(Icons.scanner,
+                                                  color: Colors.cyan, size: 50))
+                                        ]),
+                                  ],
+                                ),
+                              ]),
+                        ],
+                      );
+                    }
+                }
+              },
             ),
           );
         },

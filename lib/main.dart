@@ -1,3 +1,4 @@
+import 'package:doc_scanner/create_file_img.dart';
 import 'package:doc_scanner/login/login_test.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
       listener: (context, state) {},
       builder: (context, state) {
         if (state is AlreadyAuthState) {
-          return const LoginTest();
+          return const CreateFileIMG();
         } else if (state is UnAuthState) {
           return const LoginTest();
         } 
