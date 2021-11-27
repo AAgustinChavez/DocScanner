@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:doc_scanner/api/firebase_api.dart';
 import 'package:doc_scanner/auth/bloc/auth_bloc.dart';
 import 'package:doc_scanner/imagesFiles/imagefilter.dart';
@@ -30,6 +31,7 @@ class _CreateFileIMGState extends State<CreateFileIMG> {
   final FirebaseAuth auth = FirebaseAuth.instance;
   late Future<List<FirebaseFile>> futureFiles;
 
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +44,11 @@ class _CreateFileIMGState extends State<CreateFileIMG> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  Future _handleRefresh(){
+  Future getDocs() async {
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('$futureFiles').get();
+  }
+
+  Future _handleRefresh() async {
     final Completer<void> completer = Completer<void>();
 
     Timer(const Duration(seconds: 1), () {
@@ -99,6 +105,16 @@ class _CreateFileIMGState extends State<CreateFileIMG> {
         ),
       );
 
+  Widget _filesView(){
+    QuerySnapshot querySnapshot = FirebaseFirestore.instance.collection('$futureFiles').get() as QuerySnapshot<Object?>;
+    return ListView.builder(
+      itemCount: querySnapshot.docs.length,
+      itemBuilder: (BuildContext _context, int _index){
+        return ListTile(title: Text(querySnapshot.docs[_index].id),
+        leading: ,);
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
