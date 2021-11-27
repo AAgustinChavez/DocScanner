@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 class ImagePage extends StatelessWidget {
   final FirebaseFile file;
   
-  //'${dir.path}/${file.name}'
+  //Image display builder when clicked view the image file with the share and download buttons
   const ImagePage({
     Key? key,
     required this.file,

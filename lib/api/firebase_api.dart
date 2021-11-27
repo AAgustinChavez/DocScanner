@@ -5,6 +5,8 @@ import 'package:doc_scanner/model/firebase_file.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path_provider/path_provider.dart';
 
+
+//Download all files from the database using its id
 class FirebaseApi {
   static Future<List<String>> _getDownloadLinks(List<Reference> refs) =>
       Future.wait(refs.map((ref) => ref.getDownloadURL()).toList());
@@ -31,7 +33,6 @@ class FirebaseApi {
   static Future downloadFile(Reference ref) async {
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/${ref.name}');
-    //print('${dir.path}/${ref.name}');
     await ref.writeToFile(file);
   }
 }
