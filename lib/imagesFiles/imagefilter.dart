@@ -10,8 +10,6 @@ import 'package:photofilters/photofilters.dart';
 import 'package:image/image.dart' as imageLib;
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as Path;
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
 
@@ -31,7 +29,6 @@ class _ImageFilterState extends State<ImageFilter> {
   late AuthBloc _authBloc;
   File? _doc;
   String? _uploadedFileURL;
-  final pdf = pw.Document();
   File? pdffile;
 
   Future getImage(context) async {
@@ -53,7 +50,7 @@ class _ImageFilterState extends State<ImageFilter> {
           builder: (context) => PhotoFilterSelector(
             title: const Text("Document Filter"),
             image: image!,
-            appBarColor:Colors.cyan,
+            appBarColor: Colors.cyan,
             filters: presetFiltersList,
             filename: fileName,
             loader: Center(child: CircularProgressIndicator()),
@@ -77,8 +74,12 @@ class _ImageFilterState extends State<ImageFilter> {
     final uid = user!.uid;
 
     Reference storageReference = FirebaseStorage.instance
-        .ref()//Path.basename(_doc!.path)
-        .child('documents/' + uid + '/' + DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now())+'.jpg');
+        .ref() //Path.basename(_doc!.path)
+        .child('documents/' +
+            uid +
+            '/' +
+            DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.now()) +
+            '.jpg');
     UploadTask uploadTask = storageReference.putFile(_doc!);
     await uploadTask.then((p0) => null);
     print('File Uploaded');
